@@ -16,44 +16,43 @@ import {
   getDownloadURL,
   getBlob,
 } from "firebase/storage";
+import { useRouter } from "next/router";
+import { nanoid } from "nanoid";
 import { initializeApp, getApps, getApp } from "firebase/app";
+import { collection, doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
 
 const Home: NextPage = () => {
   const { data: session } = useSession();
-  const [code, setCode] = useState('"console.log("Hello World"');
-  var URL: string;
+  const [code, setCode] = useState('');
+  const [description, setDescription] = useState("");
+  const [name, setName] = useState("");
+  const router = useRouter();
 
-  const onCreate = (e: any) => {
+  const onCreate = async (e: any) =>  {
     e.preventDefault();
     const app = () =>
       !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
     const storage: FirebaseStorage = getStorage(app());
-    if (true) {
-      console.log(URL + " found!!");
-      const httpsReference = ref(storage, "https://firebasestorage.googleapis.com/v0/b/codegist-5c027.appspot.com/o/satish860?alt=media&token=e546cdaa-7fa7-4e44-8f3c-a88d889abae6");
-      getBlob(httpsReference).then((blob) => {
-        blob.text().then((text) => {
-          console.log(text);
-          setCode(text);
-        });
-      });
-    } else {
-      console.log("No URL found");
-      console.log(URL)
-      const storageRef = ref(storage, session?.user?.email?.split("@")[0]);
-      uploadString(storageRef, code).then((snapshot) => {
-        getDownloadURL(snapshot.ref)
-          .then((url) => {
-            URL = url;
-            console.log(URL);
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-        console.log(snapshot);
-        console.log("Uploaded a raw string!");
-      });
-    }
+    const storageRef = ref(storage, `${session?.user?.email?.split("@")[0]}.js`);
+    var result = await uploadString(storageRef, code);
+    var url = await getDownloadURL(result.ref);
+    var id = nanoid();
+    const db = getFirestore(app());
+    const colref = collection(db, "userdocs");
+    const docref = doc(
+      db,
+      "userdocs/users",
+      session?.user?.name ?? "loggedinuser",
+      id
+    );
+    await setDoc(docref, {
+      fileUrl: url,
+      description: description,
+      name: name,
+      createdOn: serverTimestamp(),
+    });
+    console.log(`${session?.user?.email?.split("@")[0]}`);
+    router.push(`/${session?.user?.email?.split("@")[0]}/${id}`);
   };
 
   if (session) {
@@ -128,6 +127,8 @@ const Home: NextPage = () => {
           >
             <input
               type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="bg-gray-100 w-full font-thin p-2  border-gray-700
               text-white text-sm rounded-md mr-4 focus:outline-none focus:text-black focus:bg-white"
               placeholder="Gist description"
@@ -137,6 +138,8 @@ const Home: NextPage = () => {
             <div className=" bg-[#f6f8fa]">
               <input
                 type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="bg-white w-64 my-2 mx-2 p-1.5 font-thin border
               text-white text-sm rounded-lg mr-4 focus:outline-none focus:text-black focus:bg-white"
                 placeholder="Filename including extension"
