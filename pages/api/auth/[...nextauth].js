@@ -13,8 +13,6 @@ export default NextAuth({
       clientSecret: process.env.GITHUB_SECRET,
     }),
   ],
-  adapter: FirestoreAdapter({
-    projectId: firebaseConfig.projectId,
-  }),
+  adapter: FirestoreAdapter(firebaseConfig),
   // ...
 });
