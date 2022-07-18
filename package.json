@@ -11,6 +11,7 @@
     "@next-auth/firebase-adapter": "^1.0.0",
     "@uiw/codemirror-theme-github": "^4.11.4",
     "@uiw/react-codemirror": "^4.11.4",
+    "arraybuffer-to-string": "^1.0.2",
     "firebase": "^9.9.0",
     "nanoid": "^4.0.0",
     "next": "latest",

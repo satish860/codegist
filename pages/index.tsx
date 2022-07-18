@@ -42,7 +42,7 @@ const Home: NextPage = () => {
     const docref = doc(
       db,
       "userdocs/users",
-      session?.user?.name ?? "loggedinuser",
+      session?.user?.email?.split("@")[0] ?? "loggedinuser",
       id
     );
     await setDoc(docref, {
